@@ -79,9 +79,19 @@ def call_tool(client: httpx.Client, session_id: str, name: str, arguments: dict,
         print(f"  p_success       : {result.get('p_success')}")
         print(f"  confidence      : {result.get('confidence')}")
         print(f"  recommendation  : {result.get('recommendation')}")
+        if result.get("overall_risk_tier"):
+            print(f"  overall_risk     : {result.get('overall_risk_tier')}")
+            print(f"  genomic_risk     : {result.get('genomic_profile', {}).get('genomic_risk')}")
+            print(f"  renal_risk       : {result.get('organ_function', {}).get('renal_risk')}")
+            print(f"  hepatic_risk     : {result.get('organ_function', {}).get('hepatic_risk')}")
+            print(f"  metabolizer_risk : {result.get('genomic_profile', {}).get('metabolizer_risk')}")
+            print(f"  clinical_note    : {result.get('clinical_note')}")
+        if result.get("suggested_alternative"):
+            alt = result["suggested_alternative"]
+            print(f"   alternative    : {alt.get('suggested_drug')} — {alt.get('suggested_p_success')}% ({alt.get('suggested_confidence')})")
         if result.get("clinical_flags"):
             for flag in result["clinical_flags"]:
-                print(f"  ⚠ flag          : {flag}")
+                print(f" ! flag          : {flag}")
         if result.get("fhir_data_summary"):
             print(f"  fhir_summary    : {result.get('fhir_data_summary')}")
         if result.get("available_patients"):
@@ -130,6 +140,13 @@ if __name__ == "__main__":
                   name="list_patients",
                   arguments={},
                   test_label="TEST 5 — list_patients tool",
+                  )
+
+        # Test 6 New Update 6
+        call_tool(client, session_id,
+                  name="patient_risk_summary",
+                  arguments={"patient_id": "patient_002"},
+                  test_label="TEST 6 — patient_risk_summary for patient_002",
                   )
 
     print("\n=== All tests complete ===")

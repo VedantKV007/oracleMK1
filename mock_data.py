@@ -491,22 +491,41 @@ def get_medication_history(patient_id: str) -> dict | None:
 def extract_genomic_factors(patient_id: str) -> dict:
     """
     Pull the key genomic scoring inputs from the FHIR Observation resource.
-    Returns a flat dict ready for the scoring engine.
+    Returns safe defaults if any field is missing or malformed.
     """
     genomics = get_genomics(patient_id)
-    if not genomics:
-        return {}
 
-    result = {}
+    # Safe defaults — conservative values that won't inflate the score
+    result = {
+        "t790m_ratio":       0.0,
+        "cyp3a4_gas":        1.0,   # Assume normal metabolizer if unknown
+        "cyp3a4_phenotype":  "unknown",
+        "egfr_status":       "unknown",
+    }
+
+    if not genomics:
+        return result
+
     for component in genomics.get("component", []):
-        code_text = component.get("code", {}).get("text", "")
-        if code_text == "T790M_ratio":
-            result["t790m_ratio"] = component.get("valueDecimal", 0.0)
-        elif code_text == "CYP3A4_phenotype":
-            result["cyp3a4_gas"] = component.get("valueDecimal", 1.0)
-            result["cyp3a4_phenotype"] = component.get("valueString", "normal_metabolizer")
-        elif code_text == "EGFR mutation status":
-            result["egfr_status"] = component.get("valueString", "unknown")
+        try:
+            code_text = component.get("code", {}).get("text", "")
+            if code_text == "T790M_ratio":
+                val = component.get("valueDecimal")
+                if val is not None and isinstance(val, (int, float)) and 0.0 <= val <= 1.0:
+                    result["t790m_ratio"] = float(val)
+            elif code_text == "CYP3A4_phenotype":
+                gas = component.get("valueDecimal")
+                if gas is not None and isinstance(gas, (int, float)) and gas >= 0:
+                    result["cyp3a4_gas"] = float(gas)
+                phenotype = component.get("valueString")
+                if phenotype:
+                    result["cyp3a4_phenotype"] = phenotype
+            elif code_text == "EGFR mutation status":
+                status = component.get("valueString")
+                if status:
+                    result["egfr_status"] = status
+        except Exception:
+            continue  # Skip malformed components, never crash
 
     return result
 
@@ -514,30 +533,104 @@ def extract_genomic_factors(patient_id: str) -> dict:
 def extract_lab_factors(patient_id: str) -> dict:
     """
     Pull eGFR, ALT, AST from the FHIR Bundle of lab Observations.
-    Returns a flat dict ready for the scoring engine.
+    Returns clinically safe defaults if any field is missing or malformed.
     """
     labs = get_labs(patient_id)
+
+    # Safe defaults — mid-range values, not inflated
+    result = {
+        "egfr_ml_min": 60.0,   # Mildly reduced — conservative default
+        "alt_u_l":     35.0,   # Within normal range
+        "ast_u_l":     25.0,   # Within normal range
+    }
+
     if not labs:
-        return {}
+        return result
 
-    result = {}
     for entry in labs.get("entry", []):
-        resource = entry.get("resource", {})
-        loinc_code = ""
-        for coding in resource.get("code", {}).get("coding", []):
-            loinc_code = coding.get("code", "")
+        try:
+            resource = entry.get("resource", {})
+            loinc_code = ""
+            for coding in resource.get("code", {}).get("coding", []):
+                loinc_code = coding.get("code", "")
 
-        value = resource.get("valueQuantity", {}).get("value", None)
+            value = resource.get("valueQuantity", {}).get("value")
 
-        if loinc_code == "33914-3":
-            result["egfr_ml_min"] = value
-        elif loinc_code == "1742-6":
-            result["alt_u_l"] = value
-        elif loinc_code == "1920-8":
-            result["ast_u_l"] = value
+            if value is None or not isinstance(value, (int, float)) or value < 0:
+                continue  # Skip invalid values
+
+            if loinc_code == "33914-3":
+                result["egfr_ml_min"] = float(value)
+            elif loinc_code == "1742-6":
+                result["alt_u_l"] = float(value)
+            elif loinc_code == "1920-8":
+                result["ast_u_l"] = float(value)
+        except Exception:
+            continue  # Skip malformed entries, never crash
 
     return result
 
+
+def extract_medication_factors(patient_id: str) -> dict:
+    """
+    Pull prior TKI response data from the FHIR MedicationRequest resource.
+    Returns safe defaults if any field is missing or malformed.
+    """
+    med = get_medication_history(patient_id)
+
+    # Safe defaults — neutral values
+    result = {
+        "prior_pfs_months": 0,
+        "best_response":    "unknown",
+        "prior_drug":       "unknown",
+    }
+
+    if not med:
+        return result
+
+    try:
+        for ext in med.get("extension", []):
+            url = ext.get("url", "")
+            if url == "prior_pfs_months":
+                val = ext.get("valueInteger")
+                if val is not None and isinstance(val, int) and val >= 0:
+                    result["prior_pfs_months"] = val
+            elif url == "best_response":
+                val = ext.get("valueString")
+                if val and val.upper() in ("CR", "PR", "SD", "PD", "UNKNOWN"):
+                    result["best_response"] = val
+
+        drug_codings = med.get("medicationCodeableConcept", {}).get("coding", [])
+        if drug_codings:
+            drug_name = drug_codings[0].get("display")
+            if drug_name:
+                result["prior_drug"] = drug_name
+    except Exception:
+        pass  # Return defaults on any error
+
+    return result
+
+def extract_lab_factors(patient_id: str) -> dict:
+    labs = get_labs(patient_id)
+    result = {"egfr_ml_min": 60.0, "alt_u_l": 35.0, "ast_u_l": 25.0}
+    if not labs:
+        return result
+    for entry in labs.get("entry", []):
+        try:
+            resource = entry.get("resource", {})
+            loinc_code = resource.get("code", {}).get("coding", [{}])[0].get("code", "")
+            value = resource.get("valueQuantity", {}).get("value")
+            if value is None or float(value) < 0:
+                continue
+            if loinc_code == "33914-3":
+                result["egfr_ml_min"] = float(value)
+            elif loinc_code == "1742-6":
+                result["alt_u_l"] = float(value)
+            elif loinc_code == "1920-8":
+                result["ast_u_l"] = float(value)
+        except Exception:
+            continue
+    return result
 
 def extract_medication_factors(patient_id: str) -> dict:
     """
