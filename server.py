@@ -315,3 +315,6 @@ if __name__ == "__main__":
     print("=" * 60)
 
     mcp.run(transport="streamable-http", host="0.0.0.0", port=8000)
+
+#Railway
+app = mcp.http_app(transport="streamable-http")
