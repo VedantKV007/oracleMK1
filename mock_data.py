@@ -610,49 +610,6 @@ def extract_medication_factors(patient_id: str) -> dict:
 
     return result
 
-def extract_lab_factors(patient_id: str) -> dict:
-    labs = get_labs(patient_id)
-    result = {"egfr_ml_min": 60.0, "alt_u_l": 35.0, "ast_u_l": 25.0}
-    if not labs:
-        return result
-    for entry in labs.get("entry", []):
-        try:
-            resource = entry.get("resource", {})
-            loinc_code = resource.get("code", {}).get("coding", [{}])[0].get("code", "")
-            value = resource.get("valueQuantity", {}).get("value")
-            if value is None or float(value) < 0:
-                continue
-            if loinc_code == "33914-3":
-                result["egfr_ml_min"] = float(value)
-            elif loinc_code == "1742-6":
-                result["alt_u_l"] = float(value)
-            elif loinc_code == "1920-8":
-                result["ast_u_l"] = float(value)
-        except Exception:
-            continue
-    return result
-
-def extract_medication_factors(patient_id: str) -> dict:
-    """
-    Pull prior TKI response data from the FHIR MedicationRequest resource.
-    Returns a flat dict ready for the scoring engine.
-    """
-    med = get_medication_history(patient_id)
-    if not med:
-        return {}
-
-    result = {}
-    for ext in med.get("extension", []):
-        url = ext.get("url", "")
-        if url == "prior_pfs_months":
-            result["prior_pfs_months"] = ext.get("valueInteger", 0)
-        elif url == "best_response":
-            result["best_response"] = ext.get("valueString", "unknown")
-
-    drug_name = med.get("medicationCodeableConcept", {}).get("coding", [{}])[0].get("display", "unknown")
-    result["prior_drug"] = drug_name
-
-    return result
 
 
 if __name__ == "__main__":

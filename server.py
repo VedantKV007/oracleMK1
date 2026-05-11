@@ -247,7 +247,7 @@ def find_best_alternative(patient_id: str, failed_drug: str, failed_cost: float)
         return {
             "suggested_drug":       best_drug,
             "suggested_cost_usd":   DRUG_COST_TABLE[best_drug],
-            "suggested_p_success":  best_result.p_success,
+            "suggested_p_success":  round(min(100.0, best_score), 1), # <--- FIXED THIS
             "suggested_confidence": best_result.confidence,
             "drug_class":           failed_class,
             "cyp_enzyme":           best_cyp,
@@ -255,7 +255,7 @@ def find_best_alternative(patient_id: str, failed_drug: str, failed_cost: float)
                 f"{failed_drug.title()} scored below 50% success threshold. "
                 f"Oracle simulated {len(DRUG_CLASS_TABLE)} formulary drugs. "
                 f"{best_drug.title()} is the highest-scoring same-class alternative "
-                f"at {best_result.p_success}% success probability.{cyp_note}"
+                f"at {round(min(100.0, best_score), 1)}% success probability.{cyp_note}" # <--- FIXED THIS
             ),
         }
     return None
@@ -372,6 +372,15 @@ def evaluate_prescription(
             "recommendation": "Internal error during simulation. Please try again.",
             "sharp_context": "received",
         }
+    # --- CFO Financial Impact Payload ---
+    waste_prevented = cost if result.p_success < 50.0 else 0.0
+    financial_impact = {
+        "drug_cost_usd": cost,
+        "waste_prevented_usd": waste_prevented,
+        "financial_note": (
+            f"By avoiding an ineffective prescription, Oracle avoided ${cost:,.0f} in wasted expenditure."
+        ) if waste_prevented > 0 else "Prescription cost clinically justified by high simulated efficacy."
+    }
 
     return {
         "triage_decision":      "SIMULATION_COMPLETE",
