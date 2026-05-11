@@ -11,8 +11,8 @@ Architecture:
   - Scoring engine: scoring.py (weighted clinical probability model)
 """
 
+
 import os
-from dotenv import load_dotenv
 from fastmcp import FastMCP
 from mock_data import (
     get_patient,
@@ -22,7 +22,7 @@ from mock_data import (
 )
 from scoring import calculate_p_success
 
-load_dotenv()
+
 
 # ── Server initialisation ────────────────────────────────────────────────────
 
