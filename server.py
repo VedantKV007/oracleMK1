@@ -306,15 +306,12 @@ def get_drug_formulary() -> dict:
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    import uvicorn
+    port = int(os.getenv("PORT", 8000))
 
     print("=" * 60)
     print("  High-Stakes Efficacy Oracle — OracleMK1")
-    print("  MCP Server starting on http://0.0.0.0:8000")
+    print(f"  MCP Server starting on http://0.0.0.0:{port}")
     print("  Tools: evaluate_prescription | list_patients | get_drug_formulary")
     print("=" * 60)
 
-    mcp.run(transport="streamable-http", host="0.0.0.0", port=8000)
-
-#Railway
-app = mcp.http_app(transport="streamable-http")
+    mcp.run(transport="streamable-http", host="0.0.0.0", port=port)
