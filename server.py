@@ -394,6 +394,7 @@ def evaluate_prescription(
         "factor_contributions": result.factor_contributions,
         "clinical_flags":       result.clinical_flags,
         "suggested_alternative": alternative,
+        "financial_impact":     financial_impact,
         "fhir_data_summary": {
             "egfr_mutation_status": genomic_factors.get("egfr_status"),
             "t790m_ratio":          genomic_factors.get("t790m_ratio"),
