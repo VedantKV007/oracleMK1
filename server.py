@@ -267,6 +267,7 @@ def evaluate_prescription(
         patient_id: str,
         drug_name: str,
         drug_cost_usd: float | None = None,
+        fhir_context: dict | None = None,
 ) -> dict:
     """
     Core Oracle tool. Evaluates whether a high-cost oncology prescription
@@ -507,7 +508,9 @@ def get_drug_formulary() -> dict:
 # -- MCP tool #4 Major update number 6 -------------------------------------------------------
 
 @mcp.tool()
-def patient_risk_summary(patient_id: str) -> dict:
+def patient_risk_summary(
+        patient_id: str,
+        fhir_context: dict | None = None, ) -> dict:
     """
     Returns a full clinical risk profile for a patient before any drug is mentioned.
     Use this as the first step in any clinical decision workflow.
