@@ -1,6 +1,6 @@
 #  OracleMK1: The Prescription Simulation Engine for Hospitals
 
-**An MCP-powered Clinical Decision Support system that enables Hospital AI Copilots to run deterministic compatible biological simulations on high-cost Drugs.**
+**An MCP-powered Clinical Decision Support engine that performs deterministic pharmacogenomic simulations on patient-specific FHIR R4 clinical data.**
 
 Built for the **Prompt Opinion / Darena Health "Agents Assemble" Hackathon** *(Track 1: Build a Superpower)*.
 
