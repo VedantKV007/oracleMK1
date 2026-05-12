@@ -1,6 +1,6 @@
 # 🧬 OracleMK1: The LLM Simulation Engine for Hospitals
 
-**An MCP-powered Clinical Decision Support system that enables Hospital AI Copilots to run deterministic biological simulations on high-cost therapies.**
+**An MCP-powered Clinical Decision Support system that enables Hospital AI Copilots to run deterministic compatible biological simulations on high-cost Drugs.**
 
 Built for the **Prompt Opinion / Darena Health "Agents Assemble" Hackathon** *(Track 1: Build a Superpower)*.
 
@@ -75,6 +75,6 @@ P_{success} = \sum_{i=1}^{n}(w_i \cdot s_i)
 
 ```
 
-![Oracle Logo](./SW_oracle.svg)
+![](./oracle_logo_shockwave_subtle.svg)
 
 *Built with determinism. Powered by biology. Designed for hospitals.*
