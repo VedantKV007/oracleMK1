@@ -1,45 +1,73 @@
 # 🧬 OracleMK1: The LLM Simulation Engine for Hospitals
-**An MCP-powered Clinical Decision Support tool that allows Hospital AI Copilots to run predictive biological simulations.**
 
-Built for the **Prompt Opinion / Darena Health "Agents Assemble" Hackathon** (Track 1: Build a Superpower).
+**An MCP-powered Clinical Decision Support system that enables Hospital AI Copilots to run deterministic biological simulations on high-risk therapies.**
+
+Built for the **Prompt Opinion / Darena Health "Agents Assemble" Hackathon** *(Track 1: Build a Superpower)*.
+
+---
 
 ## 🚨 The Problem: LLMs Cannot Simulate Biology
-When a doctor asks an AI Copilot, *"Will Osimertinib work for Patient X?"*, the LLM typically relies on generic training data to generate an answer. **This is dangerous.** Standard LLMs cannot calculate pharmacogenomics, they cannot factor in real-time renal clearance rates, and they cannot run mathematical simulations. They hallucinate.
 
-## 🚀 The Superpower: Predictive AI Simulation
-OracleMK1 gives Hospital LLMs a mathematical "brain module" via the **Model Context Protocol (MCP)**. 
+When a doctor asks an AI Copilot:
 
-Instead of guessing, the AI Copilot securely passes the patient's ID (via Darena Health's **SHARP protocol**) into the Oracle. The Oracle then pulls the patient's synthetic **FHIR R4** records and runs a **weighted probability simulation** to predict the drug's exact efficacy based on their unique DNA and organ function.
+> *"Will Osimertinib work for Patient X?"*
+
+a standard LLM typically generates an answer from generalized training patterns and statistical inference. In clinical environments, this is dangerous.
+
+LLMs cannot:
+- calculate pharmacogenomic response,
+- model renal or hepatic drug clearance,
+- validate contraindication severity,
+- or execute deterministic biological simulations.
+
+They generate plausible language — not mechanistic clinical reasoning.
+
+In oncology, where a single treatment cycle can exceed **$15,000**, probabilistic guesses are not sufficient.
+
+---
+
+## 🚀 The Superpower: Predictive Clinical Simulation
+
+OracleMK1 gives Hospital LLMs a deterministic mathematical reasoning layer through the **Model Context Protocol (MCP)**.
+
+Instead of guessing, the AI Copilot securely passes a patient's identity through Darena Health's **SHARP protocol** into the Oracle engine. OracleMK1 then retrieves the patient's synthetic **FHIR R4** records and executes a weighted clinical simulation to predict therapeutic efficacy based on genomic, metabolic, and physiological factors.
+
+The result is not a generated opinion.
+
+It is a computationally auditable treatment simulation.
+
+---
 
 ## ✨ The Simulation Pipeline
 
-* 🤖 **1. The "What-If" Trigger:** The LLM receives a prompt from the doctor and triggers the Oracle's `evaluate_prescription` tool to test a clinical hypothesis.
-* 🚦 **2. The Smart Triage Gate:** To save hospital compute costs, the simulator refuses to run on cheap drugs (e.g., Amoxicillin). It only triggers the heavy simulation for high-stakes prescriptions ($10,000–$15,000).
-* 🔬 **3. The Deep Biological Simulation:** The engine calculates a `P_Success` (0-100%) score by running the patient's FHIR data through a weighted algorithmic model:
-    * *Genomic Factors:* T790M/AF Driver Ratios (35%) & CYP3A4 Gene Activity Scores (25%).
-    * *Clinical Vitals:* eGFR Renal Clearance (20%) & Hepatic ALT/AST Stress (10%).
-* 🔄 **4. Autonomous Scenario Testing:** If the simulation fails (Success < 50%), the Oracle automatically runs background simulations on alternative drugs in the same class to find a safer option for the LLM to recommend.
-* 💼 **5. CFO Financial Output:** The simulator calculates the exact USD amount of wasted expenditure prevented by blocking the ineffective treatment, feeding ROI data directly back to the Copilot.
+### 🤖 1. Clinical Hypothesis Trigger
+The Hospital Copilot receives a physician prompt and invokes OracleMK1's `evaluate_prescription` MCP tool to test a treatment scenario.
 
-## 🛠️ MCP Tools Exposed to the LLM
-1.  `evaluate_prescription(patient_id, drug_name)`: Runs the predictive scenario and returns the mathematical probability of success.
-2.  `patient_risk_summary(patient_id)`: Allows the LLM to "read the room" by analyzing the patient's FHIR profile before a drug is even suggested.
-3.  `get_drug_formulary()`: Allows the LLM to check hospital pricing rules and simulation thresholds.
+### 🚦 2. Cost-Based Triage Gate
+To optimize hospital compute utilization, OracleMK1 selectively bypasses low-risk generic medications and reserves full simulation workloads for high-cost therapies (typically \$10k–\$15k+).
 
-## 💻 Tech Stack
-* **Protocol:** `fastmcp` (Model Context Protocol / streamable-http)
-* **Language:** Python 3.12
-* **Integration:** Darena Health / Prompt Opinion Copilot (SHARP Context Native)
-* **Data Layer:** Synthetic FHIR R4 
-* **Deployment:** Railway (Persistent SSE connections)
+### 🔬 3. Deterministic Biological Simulation
+The engine calculates a `P_success` score using weighted clinical factors derived from structured FHIR observations.
 
-## 🏁 How to Run Locally
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt
+#### Example Weighted Factors
+- **Genomics**
+  - T790M Driver Mutation Ratios *(35%)*
+  - CYP3A4 Activity Scores *(25%)*
+- **Clinical Biomarkers**
+  - eGFR Renal Clearance *(20%)*
+  - ALT/AST Hepatic Stress *(10%)*
 
-# 2. Run the MCP simulation server
-python server.py
+### 🔄 4. Autonomous Alternative Drug Testing
+If predicted efficacy falls below threshold (`Success < 50%`), OracleMK1 automatically runs background simulations against therapeutically adjacent alternatives to identify safer candidates.
 
-# 3. Test the LLM endpoints
-python test_live.py
+### 💼 5. Financial Toxicity Analysis
+The engine calculates projected pharmaceutical waste prevented by blocking ineffective treatment paths, returning ROI-aware clinical intelligence directly to the Copilot.
+
+---
+
+## 📐 Simulation Logic
+
+OracleMK1 computes treatment success probability using a weighted deterministic model:
+
+```math
+P_{success} = \sum_{i=1}^{n}(w_i \cdot s_i)
